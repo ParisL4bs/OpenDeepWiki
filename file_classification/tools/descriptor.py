@@ -6,9 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import concurrent.futures
 from typing import List, Dict
 import json
-from promptflow.core import tool
 import instructor
-from promptflow.connections import CustomConnection
 import google.generativeai as genai
 from src.schemas.description import (
     generate_code_structure_model_precise,
@@ -157,7 +155,6 @@ def process_batch(
     return None, None
 
 @trace
-@tool
 def summerizer(
     classified_files: dict,
     system_prompt_docstring: str,
@@ -170,7 +167,8 @@ def summerizer(
     max_workers: int = 30,  # Number of parallel workers
     GEMINI_API_KEY: str = "",
     ANTHROPIC_API_KEY: str = "",
-    OPENAI_API_KEY: str = ""
+    OPENAI_API_KEY: str = "",
+    trace_id: str = ""
 ) -> str:
     span = get_langfuse_context().get("span")
 

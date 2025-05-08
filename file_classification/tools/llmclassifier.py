@@ -5,10 +5,17 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
 import json
-from promptflow.core import tool
 import instructor
-from promptflow.connections import CustomConnection
 import google.generativeai as genai
+from pathlib import Path
+import sys
+SRC_DIR_RELATIVE_TO_FLOW = Path("../../src")
+current_script_dir = Path(__file__).parent.resolve()
+src_path_to_add = (current_script_dir / SRC_DIR_RELATIVE_TO_FLOW).resolve()
+
+sys.path.insert(0, str(current_script_dir)) # For importing from ./tools
+sys.path.insert(0, str(src_path_to_add.parent))
+
 from src.schemas.classif import create_file_classification
 from src.utils.utils import list_all_files
 import time
@@ -20,6 +27,8 @@ dotenv.load_dotenv()
 FILE_CLASSICATION_MODEL_0 = os.getenv("FILE_CLASSICATION_MODEL_0")
 FILE_CLASSICATION_MODEL_1 = os.getenv("FILE_CLASSICATION_MODEL_2")
 FILE_CLASSICATION_MODEL_2 = os.getenv("FILE_CLASSICATION_MODEL_3")
+# os.environ["PF_DISABLE_TRACING"] = "true" # Promptflow specific
+# os.environ["LANG_DISABLE_TRACING"] = "true" # Langchain specific
 
 from src.monitor.langfuse import get_langfuse_context, trace
 
@@ -76,6 +85,7 @@ def process_batch(
                 status_message=f"Error processing batch: {str(e)}",
                 level="ERROR",
             )
+        raise Exception(f"Batch processing failed: {str(e)}, {traceback.format_exc()}")
 
     if span:
         generation.end(
@@ -90,7 +100,6 @@ def process_batch(
 
 
 @trace
-@tool
 def llmclassifier(
     folder_path: str,
     symstem_prompt: str,
@@ -100,6 +109,7 @@ def llmclassifier(
     GEMINI_API_KEY: str = "",
     ANTHROPIC_API_KEY: str = "",
     OPENAI_API_KEY: str = "",
+    trace_id: str = ""
 ) -> str:
     span = get_langfuse_context().get("span")
 
@@ -190,8 +200,8 @@ def llmclassifier(
                     result.get("file_classifications", [])
                 )
             except Exception as e:
-                print(f"Batch processing failed: {str(e)}")
-                traceback.print_exc()
+                raise Exception(f"Batch processing failed: {str(e)}, {traceback.format_exc()}")
+
 
     # replace file_name by fileç_path
     for classification in all_results["file_classifications"]:

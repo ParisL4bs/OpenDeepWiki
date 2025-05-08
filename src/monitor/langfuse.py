@@ -5,7 +5,7 @@ import threading
 import traceback
 from contextvars import ContextVar
 from typing import Any, Callable, Dict, Optional
-
+import uuid
 from langfuse import Langfuse
 from promptflow.tracing._tracer import Tracer, get_node_name_from_context
 
@@ -70,13 +70,15 @@ def _filter_serializable_inputs(inputs: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in inputs.items() if is_json_serializable(v)}
 
 
+
+
+
 def _create_trace_and_span(
-    langfuse: Langfuse, span_name: str, inputs: Dict[str, Any]
+    langfuse: Langfuse, inputs: Dict[str, Any], name: str, trace_id: str
 ) -> Any:
     """Create a new trace and span with proper metadata."""
-    trace_id = Tracer.current_run_id().split("_")[0]
-    trace = langfuse.trace(id=trace_id, name=os.getenv("PROMPTFLOW_NAME", "promptflow"))
-    return trace.span(name=span_name, input=inputs)
+    trace = langfuse.trace(id=trace_id, name= "classifier")    
+    return trace.span(name=name, input=inputs)
 
 
 def trace(func: Callable) -> Callable:
@@ -87,11 +89,11 @@ def trace(func: Callable) -> Callable:
         if LANG_DISABLE_TRACING:
             return func(*args, **kwargs)
         langfuse = get_langfuse_client()
-        span_name = get_node_name_from_context(used_for_span_name=True)
+
         func_inputs = _filter_serializable_inputs(kwargs)
 
         # Create new span and trace
-        span = _create_trace_and_span(langfuse, span_name, func_inputs)
+        span = _create_trace_and_span(langfuse, func_inputs, name=func.__name__, trace_id=kwargs["trace_id"])
         update_langfuse_context(span=span)
 
         result = None

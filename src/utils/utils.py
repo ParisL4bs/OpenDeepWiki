@@ -2,6 +2,14 @@ import os
 import ast
 from typing import List, Dict, Any
 from dataclasses import dataclass
+import uuid
+
+
+
+def generate_trace_id() -> str:
+    """Generate a random unique trace ID suitable for use with Langfuse."""
+    return str(uuid.uuid4())
+
 
 
 @dataclass
