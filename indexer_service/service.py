@@ -8,6 +8,7 @@ from src.schemas.description import (
     TemplateManager,
     generate_code_structure_model_consize,
     DocumentCompression,
+    YamlBrief,
 )
 from src.schemas.classif import create_file_classification
 from .utils import list_all_files, SAFE
@@ -20,7 +21,7 @@ import concurrent.futures
 import google.generativeai as genai
 import logging
 import traceback
-from app.services.monitor.langfuse import get_langfuse_context,trace,generate_trace_id
+from src.monitor.langfuse import get_langfuse_context,trace,generate_trace_id
 from pathlib import Path
 
 logger = logging.getLogger(__name__)

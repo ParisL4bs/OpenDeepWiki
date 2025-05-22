@@ -215,7 +215,9 @@ Your task is to answer any question related to the documentation of the python r
         logger.info(f"Using GEMINI_API_KEY: {api_key_preview}... (length: {len(gemini_api_key) if gemini_api_key else 0})")
         
         payload = {
-            "repo_local_path": str(repo_path), 
+            "folder_path": str(repo_path), 
+            "batch_size": 50,
+            "max_workers": 10,
             "GEMINI_API_KEY": gemini_api_key,
             "ANTHROPIC_API_KEY": "",
             "OPENAI_API_KEY": ""
@@ -224,7 +226,8 @@ Your task is to answer any question related to the documentation of the python r
         response = requests.post(url_file_classification, json=payload) # Use repo_path directly
         if response.status_code != 200:
             raise Exception("Failed to get documentation from the server.")
-        response = response.json()
+        response_data = response.json()
+        response = response_data["result"]
 
         documentation_json = {"documentation": response["documentation"]}
         documentation_md_json = {"documentation_md": response["documentation_md"]}
@@ -305,7 +308,9 @@ Your task is to answer any question related to the documentation of the python r
         logger.info(f"Using GEMINI_API_KEY: {api_key_preview}... (length: {len(gemini_api_key) if gemini_api_key else 0})")
         
         payload = {
-            "repo_local_path": str(repo_path), 
+            "folder_path": str(repo_path), 
+            "batch_size": 50,
+            "max_workers": 10,
             "GEMINI_API_KEY": gemini_api_key,
             "ANTHROPIC_API_KEY": "",
             "OPENAI_API_KEY": ""
@@ -327,11 +332,11 @@ Your task is to answer any question related to the documentation of the python r
 
         response_data = response.json()
         logger.info(f"Received response from classifier: {response_data}")
+        response = response_data["result"]
 
-
-        documentation_json = {"documentation": response_data.get("documentation", {})}
-        documentation_md_json = {"documentation_md": response_data.get("documentation_md", "")}
-        config_json = {"config": response_data.get("config", {})}
+        documentation_json = {"documentation": response.get("documentation", {})}
+        documentation_md_json = {"documentation_md": response.get("documentation_md", "")}
+        config_json = {"config": response.get("config", {})}
 
 
         # Save the generated data
@@ -561,13 +566,21 @@ Your task is to answer any question related to the documentation of the python r
             url_file_classification = "http://localhost:8002/score"
             logger.info(f"Calling classifier service for updated repo at {existing_repo_path}")
             response = requests.post(
-                url_file_classification, json={"repo_local_path": str(existing_repo_path), "gemini_api_key": gemini_api_key} # Use the path in the shared volume
+                url_file_classification, json={
+                    "folder_path": str(existing_repo_path), 
+                    "batch_size": 50,
+                    "max_workers": 10,
+                    "GEMINI_API_KEY": gemini_api_key,
+                    "ANTHROPIC_API_KEY": "",
+                    "OPENAI_API_KEY": ""
+                } # Use the path in the shared volume
             )
             
             if response.status_code != 200:
                 raise Exception(f"Classifier service failed with status {response.status_code}.")
                 
-            response_data = response.json()
+            response_result = response.json()
+            response_data = response_result["result"]
             
             # Load existing JSON files using absolute paths
             documentation_path = Path(f"/app/docstrings_json/{repo_name}.json")

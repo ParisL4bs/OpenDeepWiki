@@ -1,4 +1,5 @@
 #!/bin/bash
 
+# Serve libraire service using FastAPI
 
-pf flow serve --source libraire --port 8001 --host 0.0.0.0 --engine fastapi --skip-open-browser
+cd /app && python -m uvicorn libraire_service.server:app --host 0.0.0.0 --port 8001

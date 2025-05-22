@@ -7,7 +7,6 @@ from contextvars import ContextVar
 from typing import Any, Callable, Dict, Optional
 import uuid
 from langfuse import Langfuse
-from promptflow.tracing._tracer import Tracer, get_node_name_from_context
 
 import dotenv
 dotenv.load_dotenv()

@@ -1,5 +1,5 @@
 #!/bin/bash
 
-#desactivate prompt logs
+# Serve indexer service using FastAPI
 
-pf flow serve --source file_classification --port 8002 --host 0.0.0.0 --engine fastapi --skip-open-browser
+cd /app && python -m uvicorn indexer_service.server:app --host 0.0.0.0 --port 8002
